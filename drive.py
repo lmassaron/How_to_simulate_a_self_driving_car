@@ -24,6 +24,7 @@ from flask import Flask
 from io import BytesIO
 
 #load our saved model
+from model import build_model
 from keras.models import load_model
 
 #helper class
@@ -73,7 +74,7 @@ def telemetry(sid, data):
                 speed_limit = MAX_SPEED
             throttle = 1.0 - steering_angle**2 - (speed/speed_limit)**2
 
-            print('{} {} {}'.format(steering_angle, throttle, speed))
+            print('steering: {:+05.2f} | throttle: {:04.3f} > {:04.1f} mph'.format(steering_angle*10., throttle, speed))
             send_control(steering_angle, throttle)
         except Exception as e:
             print(e)
@@ -112,6 +113,11 @@ if __name__ == '__main__':
         help='Path to model h5 file. Model should be on the same path.'
     )
     parser.add_argument(
+        '--speed',
+        type=int,
+        help='Maximum speed in mph'
+    )
+    parser.add_argument(
         'image_folder',
         type=str,
         nargs='?',
@@ -120,8 +126,13 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
+    if args.speed:
+        MAX_SPEED = args.speed
+
     #load model
-    model = load_model(args.model)
+    args.keep_prob=0.0
+    model = build_model(args)
+    model.load_weights(args.model)
 
     if args.image_folder != '':
         print("Creating image folder at {}".format(args.image_folder))
@@ -134,6 +145,15 @@ if __name__ == '__main__':
     else:
         print("NOT RECORDING THIS RUN ...")
 
+    print("\n                   _..-------++._")
+    print("               _.-'/ |      _||  \"--._")
+    print("         __.--'`._/_\j_____/_||___\    `----.")
+    print("    _.--'_____    |          \     _____    /")
+    print("  _j    /,---.\   |        =o |   /,---.\   |_")
+    print(" [__]==// .-. \\==`===========/==// .-. \\=[__]")
+    print("   `-._|\ `-' /|___\_________/___|\ `-' /|_.'")
+    print("         `---'                     `---'")
+    print("\nSTARTING AUTONOMOUS MODE...")
     # wrap Flask application with engineio's middleware
     app = socketio.Middleware(sio, app)
 

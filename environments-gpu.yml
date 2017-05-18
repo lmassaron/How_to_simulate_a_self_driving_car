@@ -1,4 +1,4 @@
-name: car-behavioral-cloning
+name: sdc
 channels:
     - https://conda.anaconda.org/menpo
     - conda-forge
